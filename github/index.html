@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>반대 신문 질문 만들기</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">CX</span>
+        <div>
+          <p class="brand-eyebrow">Cross-Examination Studio</p>
+          <h1 class="brand-title">반대 신문 질문 만들기</h1>
+        </div>
+      </div>
+      <div class="header-tools">
+        <p class="student-chip" id="studentChip" hidden></p>
+        <p class="sync-chip" id="syncChip" role="status" hidden></p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="notice notice-warn" id="configNotice" hidden>
+      아직 기록 저장소 주소가 설정되지 않았습니다. 선생님께 알려 주세요. (config.js의 API_URL)
+    </div>
+    <div class="notice notice-warn" id="syncNotice" hidden>
+      <span id="syncNoticeText"></span>
+      <button type="button" class="btn btn-text" id="btnSyncRetry">지금 다시 보내기</button>
+    </div>
+    <div class="notice notice-warn" id="storageNotice" hidden>
+      이 기기에서는 임시 저장이 되지 않아요. 활동을 마칠 때까지 이 창을 닫지 마세요.
+    </div>
+    <div class="notice" id="restoreNotice" hidden>
+      <span>이전에 하던 활동을 불러왔습니다.</span>
+      <button type="button" class="btn btn-text" id="btnRestart">새 활동 시작</button>
+    </div>
+
+    <ol class="progress progress-6" id="progress" aria-label="활동 단계">
+      <li data-idx="0"><span class="dot">0</span><span class="label">시작</span></li>
+      <li data-idx="1"><span class="dot">1</span><span class="label">입론문</span></li>
+      <li data-idx="2"><span class="dot">2</span><span class="label">관점</span></li>
+      <li data-idx="3"><span class="dot">3</span><span class="label">문제점</span></li>
+      <li data-idx="4"><span class="dot">4</span><span class="label">질문</span></li>
+      <li data-idx="5"><span class="dot">5</span><span class="label">피드백</span></li>
+    </ol>
+
+    <details class="essay-ref card" id="essayRef" hidden>
+      <summary>상대 측 입론문 다시 보기</summary>
+      <div class="essay-body" id="essayRefBody"></div>
+    </details>
+
+    <div class="notice" id="lockedNotice" hidden>
+      <span>확정한 내용이라 수정할 수 없어요. 읽기만 할 수 있어요.</span>
+    </div>
+
+    <!-- 0단계 -->
+    <section class="step card" data-step="start" hidden>
+      <p class="step-kicker">0단계 · 시작</p>
+      <h2>활동을 시작해 볼까요?</h2>
+      <p class="guide">학번과 이름을 입력하고 시작하세요. 각 단계의 내용은 자동으로 선생님께 전송되어 따로 제출할 필요가 없어요.</p>
+      <div class="field">
+        <label for="studentNumber">학번 <span class="req">필수</span></label>
+        <input id="studentNumber" type="text" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="예: 20315">
+        <p class="error" data-error-for="studentNumber"></p>
+      </div>
+      <div class="field">
+        <label for="studentName">이름 <span class="req">필수</span></label>
+        <input id="studentName" type="text" autocomplete="off" maxlength="30" placeholder="예: 김하늘">
+        <p class="error" data-error-for="studentName"></p>
+      </div>
+      <p class="hint" id="lockedHint" hidden>활동을 시작한 뒤에는 학번과 이름을 바꿀 수 없어요. 바꾸려면 위의 [새 활동 시작]을 눌러 주세요.</p>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" id="btnHistory">이 기기의 내 활동 기록 보기</button>
+        <button type="button" class="btn btn-primary" data-action="next">시작하기</button>
+      </div>
+    </section>
+
+    <!-- 1단계 -->
+    <section class="step card" data-step="essay" hidden>
+      <p class="step-kicker">1단계 · 상대 측 입론문 읽기</p>
+      <h2>상대 측 입론문을 붙여 넣어 주세요</h2>
+      <p class="guide">상대 측이 어떤 주장을 하고, 어떤 이유와 근거를 들었는지 생각하며 꼼꼼히 읽어 보세요.</p>
+      <div class="field-row">
+        <div class="field grow">
+          <label for="topic">논제 <span class="opt">선택</span></label>
+          <input id="topic" type="text" maxlength="150" placeholder="예: 청소년의 SNS 사용을 법으로 제한해야 한다.">
+          <p class="error" data-error-for="topic"></p>
+        </div>
+        <fieldset class="field stance">
+          <legend>상대 측 입장 <span class="opt">선택</span></legend>
+          <div class="seg">
+            <label><input type="radio" name="opponentStance" value="찬성"><span>찬성</span></label>
+            <label><input type="radio" name="opponentStance" value="반대"><span>반대</span></label>
+            <label><input type="radio" name="opponentStance" value="모름"><span>모름</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="field">
+        <label for="opponentEssay">상대 측 입론문 <span class="req">필수</span></label>
+        <textarea id="opponentEssay" rows="10" placeholder="상대 측 입론문 전체를 붙여 넣어 주세요. (100~3,000자)"></textarea>
+        <p class="counter" data-count-for="opponentEssay"></p>
+        <p class="error" data-error-for="opponentEssay"></p>
+      </div>
+      <div class="essay-preview" id="essayPreviewWrap" hidden>
+        <p class="preview-title">읽기 화면</p>
+        <div class="essay-body" id="essayPreview"></div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" data-action="prev">이전</button>
+        <button type="button" class="btn btn-primary" data-action="next">다음</button>
+      </div>
+    </section>
+
+    <!-- 2단계 -->
+    <section class="step card" data-step="criterion" hidden>
+      <p class="step-kicker">2단계 · 검토 관점 선택</p>
+      <h2>어떤 관점으로 검토할까요?</h2>
+      <p class="guide">입론문을 읽으며 가장 의문이 들었던 부분을 떠올리고, 그 의문과 가장 가까운 검토 질문 하나를 골라 보세요.</p>
+      <div id="criteriaList" class="criteria" role="radiogroup" aria-label="검토 질문"></div>
+      <p class="error" data-error-for="criterion"></p>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" data-action="prev">이전</button>
+        <button type="button" class="btn btn-primary" data-action="next">다음</button>
+      </div>
+    </section>
+
+    <!-- 3단계 -->
+    <section class="step card" data-step="problem" hidden>
+      <p class="step-kicker">3단계 · 문제점 찾기</p>
+      <h2>어떤 점이 문제라고 생각하나요?</h2>
+      <p class="guide">선택한 관점에서 볼 때 입론문의 어느 부분이, 왜 문제인지 구체적으로 적어 보세요.</p>
+      <div class="selected-criterion" id="selectedCriterion3"></div>
+      <div class="field">
+        <label for="quotedPart">문제가 있다고 생각하는 부분 옮겨 적기 <span class="opt">선택</span></label>
+        <textarea id="quotedPart" rows="3" placeholder="입론문에서 해당 문장을 그대로 옮겨 적어 보세요."></textarea>
+        <p class="counter" data-count-for="quotedPart"></p>
+        <p class="error" data-error-for="quotedPart"></p>
+      </div>
+      <div class="field">
+        <label for="problemThought">나의 생각 <span class="req">필수</span></label>
+        <textarea id="problemThought" rows="6" placeholder="예: 근거로 든 설문 조사가 언제, 누구를 대상으로 한 것인지 나와 있지 않아서 믿기 어렵다고 생각한다. (30~800자)"></textarea>
+        <p class="counter" data-count-for="problemThought"></p>
+        <p class="error" data-error-for="problemThought"></p>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" data-action="prev">이전</button>
+        <button type="button" class="btn btn-primary" data-action="next">다음</button>
+      </div>
+    </section>
+
+    <!-- 4단계 -->
+    <section class="step card" data-step="question" hidden>
+      <p class="step-kicker">4단계 · 반대 신문 질문 만들기</p>
+      <h2>상대 측에게 건넬 질문을 만들어 보세요</h2>
+      <p class="guide">앞에서 찾은 문제점을 상대가 직접 확인하거나 인정할 수 있도록 질문으로 바꾸어 보세요.</p>
+      <fieldset class="field">
+        <legend>질문 유형 <span class="req">필수</span></legend>
+        <div class="qtypes" id="qtypeList"></div>
+        <p class="error" data-error-for="questionType"></p>
+      </fieldset>
+      <div class="field">
+        <label for="studentQuestion">나의 반대 신문 질문 <span class="req">필수</span></label>
+        <textarea id="studentQuestion" rows="4" placeholder="상대 측에게 실제로 묻는 말투로 적어 보세요. (10~300자)"></textarea>
+        <p class="counter" data-count-for="studentQuestion"></p>
+        <p class="error" data-error-for="studentQuestion"></p>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" data-action="prev">이전</button>
+        <button type="button" class="btn btn-primary" data-action="next" id="btnQuestionNext">제출 전 확인</button>
+      </div>
+    </section>
+
+    <!-- 4단계: 확인 -->
+    <section class="step card" data-step="confirm" hidden>
+      <p class="step-kicker">4단계 · 제출 전 확인</p>
+      <h2>확정하기 전에 확인해 주세요</h2>
+      <p class="guide">아래 내용이 맞는지 살펴보세요. <strong>확정하면 1~4단계 내용을 수정할 수 없습니다.</strong></p>
+      <dl class="summary" id="confirmSummary"></dl>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" data-action="prev">돌아가서 고치기</button>
+        <button type="button" class="btn btn-primary" id="btnConfirm">확정하고 피드백 받으러 가기</button>
+      </div>
+    </section>
+
+    <!-- 5단계 -->
+    <section class="step card" data-step="feedback" hidden>
+      <p class="step-kicker">5단계 · ChatGPT 피드백 받기</p>
+      <h2>ChatGPT에게 피드백을 받아 보세요</h2>
+      <p class="guide">ChatGPT의 답변도 틀릴 수 있어요. 입론문과 비교하며 비판적으로 읽어 보세요.</p>
+
+      <div class="gpt-step">
+        <p class="gpt-num">①</p>
+        <div class="gpt-content">
+          <h3>요청문 복사하기</h3>
+          <p class="hint">아래 요청문에는 지금까지 작성한 내용이 모두 들어 있어요.</p>
+          <textarea id="promptBox" class="prompt-box" rows="9" readonly aria-label="ChatGPT 요청문"></textarea>
+          <div class="inline-actions">
+            <button type="button" class="btn btn-primary" id="btnCopy">요청문 복사</button>
+            <span class="copy-status" id="copyStatus" role="status"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gpt-step">
+        <p class="gpt-num">②</p>
+        <div class="gpt-content">
+          <h3>ChatGPT에 붙여 넣기</h3>
+          <p>ChatGPT를 새 탭에서 열고, 복사한 요청문을 붙여 넣어 보내세요.</p>
+          <div class="inline-actions">
+            <a class="btn btn-ghost" id="linkChatGPT" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT 새 탭으로 열기 ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="gpt-step">
+        <p class="gpt-num">③</p>
+        <div class="gpt-content">
+          <h3>답변 붙여 넣기</h3>
+          <p class="hint">ChatGPT 답변 아래의 복사 버튼을 누르거나, 답변 전체를 드래그해 복사한 뒤 붙여 넣으세요.</p>
+          <div class="field">
+            <label for="gptResponse">ChatGPT의 답변 <span class="req">필수</span></label>
+            <textarea id="gptResponse" rows="10" placeholder="ChatGPT의 답변 전체를 붙여 넣어 주세요. (50~5,000자)"></textarea>
+            <p class="counter" data-count-for="gptResponse"></p>
+            <p class="error" data-error-for="gptResponse"></p>
+          </div>
+          <div class="notice notice-warn" id="formatWarn" hidden>답변 형식이 요청과 다릅니다. 답변 전체를 복사했는지 확인해 보세요.</div>
+          <div id="feedbackView" hidden></div>
+          <p class="hint" id="feedbackSavedHint" hidden>피드백이 저장되었어요. 저장한 답변은 수정할 수 없어요.</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" data-action="prev">이전</button>
+        <button type="button" class="btn btn-primary" id="btnSaveFeedback">피드백 저장</button>
+        <button type="button" class="btn btn-primary" data-action="next" id="btnToDone" hidden>활동 마치기</button>
+      </div>
+    </section>
+
+    <!-- 완료 -->
+    <section class="step card" data-step="done" hidden>
+      <p class="step-kicker">활동 완료</p>
+      <h2>수고했어요!</h2>
+      <div class="submit-box" id="doneBox">
+        <p class="done-status" id="doneStatus"></p>
+        <p class="hint">따로 제출하지 않아도 돼요. 선생님 화면에서 활동 과정을 확인할 수 있어요.</p>
+      </div>
+      <h3 class="summary-title">오늘의 활동</h3>
+      <dl class="summary" id="doneSummary"></dl>
+      <div class="actions">
+        <span></span>
+        <button type="button" class="btn btn-ghost" id="btnNew">새 활동 시작</button>
+      </div>
+    </section>
+
+    <!-- 이 기기의 기록 -->
+    <section class="step card" data-step="history" hidden>
+      <p class="step-kicker">이 기기의 내 활동 기록</p>
+      <h2 id="historyTitle">지난 활동 기록</h2>
+      <p class="guide">이 기기에서 마친 활동 기록이에요. 읽기만 할 수 있어요.</p>
+      <div id="historyList"></div>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" id="btnHistoryBack">돌아가기</button>
+        <span></span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <a href="teacher.html">교사 페이지</a>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
